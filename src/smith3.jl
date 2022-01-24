@@ -86,9 +86,10 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
     end
     
     pullfirst!(M)
-    if m == 1
-        return push!(D, abs(first(M)))
-    elseif issmithable(D, M)
+    # if m == 1
+    #     return push!(D, abs(first(M)))
+    # end
+    if issmithable(D, M)
         push!(D, abs(first(M)))
         gauss!(M)
         M = M[2:end, 2:end]
@@ -97,27 +98,32 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
 
     while !issmithable(D, M)
         M11 = first(M)
-        row1 = M[1,:] .% M11
-        if !iszero(row1)
-            j = findlast(x -> x != 0, row1)
-            cswap!(M, 2, j)
-            k = archimedes(M[1,1], M[1,2])
+        if (M[1,2] % M11) != 0
+            k = archimedes(M11, M[1,2])
             M[:,2] -= k*M[:,1]
-        else
-            column1 = M[:,1] .% M11
-            if !iszero(column1)
-                i = findlast(x -> x != 0, column1)
-                rswap!(M, 2, i)
-                k = archimedes(M[1,1], M[2,1])
-                M[2,:] -= k*M[1,:]
-            else
-                element = M .% M11
-                i,j = nonzero_argmin(element).I
-                rswap!(M,2,i)
-                cswap!(M,2,j)
-                M[1,:] += M[2,:]
-                k = archimedes(M[1,1], M[1,2])
+        else 
+            row1 = M[1,:] .% M11
+            if !iszero(row1)
+                j = findlast(x -> x != 0, row1)
+                cswap!(M, 2, j)
+                k = archimedes(M11, M[1,2])
                 M[:,2] -= k*M[:,1]
+            else
+                column1 = M[:,1] .% M11
+                if !iszero(column1)
+                    i = findlast(x -> x != 0, column1)
+                    rswap!(M, 2, i)
+                    k = archimedes(M11, M[2,1])
+                    M[2,:] -= k*M[1,:]
+                else
+                    element = M .% M11
+                    i,j = nonzero_argmin(element).I
+                    rswap!(M,2,i)
+                    cswap!(M,2,j)
+                    M[1,:] += M[2,:]
+                    k = archimedes(M11, M[1,2])
+                    M[:,2] -= k*M[:,1]
+                end
             end
         end
         pullfirst!(M)
@@ -135,8 +141,12 @@ M = [2 3 3 5; 3 -1 -5 2; 3 0 6 9; -2 -2 4 0]; X = copy(M)
 @time smith2(X)
 @time answer = X |> smith |> diagm |> diag
 
-X = rand(-9:9, 100,100)
+X = rand(0:10, 100,100)
 @time smith2(X)
 @time answer = X |> smith |> diagm |> diag
 
 prod(smith2(X) .== X |> smith |> diagm |> diag)
+
+Y = rand(0:10, 10,1000)
+@time smith2(Y)
+@time answer = Y |> smith |> diagm |> diag
