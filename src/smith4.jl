@@ -76,11 +76,11 @@ function firstcol(M::Matrix{T}) where T <: Integer
 end
 
 function ccycle!(M::Matrix{T}) where T <: Integer
-    @views M = hcat(M[:,2:end], M[:,1])
+    @views M = hcat(M[:,2:end], M[:,[1]])
     return M
 end
 function rcycle!(M::Matrix{T}) where T <: Integer
-    @views M = vcat(M[2:end,:], M[1,:])
+    @views M = vcat(M[2:end,:], M[[1],:])
     return M
 end
 
@@ -89,7 +89,7 @@ function pull!(M::Matrix{T}) where T <: Integer
 end
 
 
-function smith2(M::Matrix{T}) where T <: Integer
+function smith4(M::Matrix{T}) where T <: Integer
     D = [1]
     m,n = size(M)
     if (m > n)
@@ -109,12 +109,15 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
     end
     # Now M has nonzero element at least one.
 
+    if m == 1
+        return push!(D, M[nonzero_argmin(M)])
+    end
+
     while !issmithable(D, M)
-        println(M)
 
         while iszero(first(M))
-            println("1")
-            j = findfirst(!iszero, firstrow(M))
+            # j = findfirst(!iszero, firstrow(M))
+            j = nonzero_argmin(firstrow(M))
             if isnothing(j) # It means the firstrow of M is a zero vector.
                 if iszero(firstcol(M))
                     ccycle!(M)
@@ -128,12 +131,17 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
         @assert !iszero(first(M)) # Now the M₁₁ is nonzero.
 
         while mod(M[1,2], M11) == 0
-        println("?")
+            # println(M)
+            # println("?")
             j = findfirst(M1j -> (mod(M1j, M11) != 0), firstrow(M))
             if isnothing(j)
-                gauss!(M)
-                M[2,1] = M11
-                rcycle!(M)
+                if m > 2
+                    gauss!(M)
+                    M[2,1] = M11
+                    rcycle!(M)
+                else
+                    M[[1,2],:] = M[[2,1],:]
+                end
             else
                 cswap!(M, 2,j)
             end
@@ -141,13 +149,14 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
         end
         # @assert mod(M[1,2], M11) != 0
 
-        if M11 > M[1,2]
+        if abs(M11) > abs(M[1,2])
             cswap!(M, 1,2)
         end
         k = archimedes(M11, M[1,2])
         M[:,2] -= k*M[:,1]
         
         cswap!(M, 1,2)
+        # println(M)
     end
 
     push!(D, abs(first(M)))
@@ -159,5 +168,9 @@ end
 using SmithNormalForm, LinearAlgebra
 
 M = [2 3 3 5; 3 -1 -5 2; 3 0 6 9; -2 -2 4 0]; X = copy(M)
+@time smith4(X)
 @time answer = X |> smith |> diagm |> diag
-@time smith2(X)
+
+# X = rand(0:10, 10,10)
+# @time smith4(X)
+# @time answer = X |> smith |> diagm |> diag
