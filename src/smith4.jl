@@ -116,8 +116,9 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
     while !issmithable(D, M)
 
         while iszero(first(M))
-            # j = findfirst(!iszero, firstrow(M))
-            j = nonzero_argmin(firstrow(M))
+            # println("1")
+            j = findfirst(!iszero, firstrow(M))
+            # j = nonzero_argmin(firstrow(M))
             if isnothing(j) # It means the firstrow of M is a zero vector.
                 if iszero(firstcol(M))
                     ccycle!(M)
@@ -130,14 +131,14 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
         M11 = first(M)
         @assert !iszero(first(M)) # Now the M₁₁ is nonzero.
 
-        while mod(M[1,2], M11) == 0
+        while mod(M[1,2], first(M)) == 0
             # println(M)
             # println("?")
-            j = findfirst(M1j -> (mod(M1j, M11) != 0), firstrow(M))
+            j = findfirst(M1j -> (mod(M1j, first(M)) != 0), firstrow(M))
             if isnothing(j)
                 if m > 2
                     gauss!(M)
-                    M[2,1] = M11
+                    M[2,1] = first(M)
                     rcycle!(M)
                 else
                     M[[1,2],:] = M[[2,1],:]
@@ -145,17 +146,20 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
             else
                 cswap!(M, 2,j)
             end
-            M11 = first(M)
         end
         # @assert mod(M[1,2], M11) != 0
 
-        if abs(M11) > abs(M[1,2])
+        if abs(first(M)) > abs(M[1,2])
             cswap!(M, 1,2)
+            continue
         end
-        k = archimedes(M11, M[1,2])
+
+        k = (M[1,2] ÷ first(M))
         M[:,2] -= k*M[:,1]
         
-        cswap!(M, 1,2)
+        if abs(first(M)) > abs(M[1,2])
+            cswap!(M, 1,2)
+        end
         # println(M)
     end
 
@@ -171,6 +175,6 @@ M = [2 3 3 5; 3 -1 -5 2; 3 0 6 9; -2 -2 4 0]; X = copy(M)
 @time smith4(X)
 @time answer = X |> smith |> diagm |> diag
 
-# X = rand(0:10, 10,10)
-# @time smith4(X)
-# @time answer = X |> smith |> diagm |> diag
+X = rand(0:10, 100,100)
+@time smith4(X)
+@time answer = X |> smith |> diagm |> diag
