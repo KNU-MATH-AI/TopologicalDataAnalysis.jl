@@ -110,7 +110,7 @@ function smith!(D::Array{T}, M::Matrix{T}) where T <: Integer
     # Now M has nonzero element at least one.
 
     if m == 1
-        return push!(D, M[nonzero_argmin(M)])
+        return push!(D, abs(M[nonzero_argmin(M)]))
     end
 
     while !issmithable(D, M)
@@ -178,3 +178,6 @@ M = [2 3 3 5; 3 -1 -5 2; 3 0 6 9; -2 -2 4 0]; X = copy(M)
 X = rand(0:10, 100,100)
 @time smith4(X)
 @time answer = X |> smith |> diagm |> diag
+
+X = rand(0:10, 100,100)
+smith4(X) == (answer = X |> smith |> diagm |> diag)
