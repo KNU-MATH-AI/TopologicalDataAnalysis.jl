@@ -1,5 +1,5 @@
 module TopologicalDataAnalysis
 
-greet() = print("Hello World!")
+include("PersistenceDiagram.jl")
 
 end # module
