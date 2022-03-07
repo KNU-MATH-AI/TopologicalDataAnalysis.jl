@@ -18,18 +18,19 @@ maxdim = 4
 # Initialization
 kdtree = KDTree(M2n)
 knnk = knn(kdtree, M2n, maxdim+1, true)
-vertices = knnk[1]
-prediams = knnk[2] #pre-diameter
-map(popfirst!,prediams)
+prevert = knnk[1] #pre-vertex
+prediam = knnk[2] #pre-diameter
+map(popfirst!,prediam)
 
 Δ = []
 preΔ = []
 push!(preΔ, [[j] for j in 1:n])
 
 for k in 1:maxdim
-    diam = getindex.(prediams, k)
+    vert = view.(prevert, Ref(1:(k+1)))
+    diam = getindex.(prediam, k)
     push!(Δ, [])
-    push!(preΔ, view.(vertices, Ref(1:(k+1)))[diam .≤ 2ε] .|> sort |> unique)
+    push!(preΔ, vert[diam .≤ 2ε] .|> sort |> unique)
     for β in preΔ[k]
         flag_Δ = false
         for α in preΔ[k+1]
