@@ -9,7 +9,7 @@ struct AbstractSimplicialComplex
 end
 const ASC = AbstractSimplicialComplex
 
-include("tDATAsets.jl")
+include("../utilities/tDATAsets.jl")
 Random.seed!(0)
 M2n = rand(Sphere(2), 20)
 d, n = size(M2n)
