@@ -9,10 +9,11 @@ struct AbstractSimplicialComplex
 end
 const ASC = AbstractSimplicialComplex
 
-include("tDATAsets.jl")
+include("../utilities/tDATAsets.jl")
 Random.seed!(0)
 M2n = rand(Sphere(2), 20)
 d, n = size(M2n)
+flatΔ = 1:n
 ε = 0.3
 maxdim = 6
 
@@ -22,7 +23,7 @@ knn0 = knn(kdtree, M2n, 2)
 # bit_Δ0 = first.(knn0[2]) .≥ ε
 # Δ0 = [[j] for j in 1:n][bit_Δ0]
 begin
-cache_r = Float64[]    
+cache_r = Float64[]
 Δ = []
 preΔ = []
 # push!(preΔ, knn0[1][.!bit_Δ0] |> sort .|> sort |> unique)
@@ -32,7 +33,6 @@ for k in 1:maxdim
     push!(Δ, [])
     push!(preΔ, [])
     # flatΔ = reduce(∪, preΔ[k]) |> sort
-    flatΔ = 1:n
     for (idx_taboo, β) in enumerate(preΔ[k])
         flag_Δ = false
         for α in preΔ[k+1]
