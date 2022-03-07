@@ -69,12 +69,12 @@ end
 
 proj_1d(Data)
 
-struct Interval
-    a::Real
-    b::Real
+struct Interval{T} where T<:Real
+    a::T
+    b::T
 end
 
-function ∈(x::Real, interval::Interval)
+function ∈(x::T, interval::Interval) where T<:Real
     if interval.a ≤ x ≤ interval.b
         return true
     else
