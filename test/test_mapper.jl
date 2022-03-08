@@ -264,7 +264,7 @@ function coor_mean(X_subset_clustering, Info)
     return center_
 end
 
-function mapper_plot(link, X_subset_clustering, Info)
+function mapper_plot(link, X_subset_clustering, Info, xlim, ylim)
     center_ = coor_mean(X_subset_clustering, Info)        
 
     linked_center = zeros(length(link), 4)
@@ -274,14 +274,14 @@ function mapper_plot(link, X_subset_clustering, Info)
     end
     linked_center
 
-    p = plot([linked_center[1,1], linked_center[1,3]], [linked_center[1,2], linked_center[1,4]], color=:black, xlim=(-1.5,3), ylim=(-1.5,3), label="")
+    p = plot([linked_center[1,1], linked_center[1,3]], [linked_center[1,2], linked_center[1,4]], color=:black, xlim=xlim, ylim=ylim, label="")
     for i ∈ 2:length(link)
         plot!([linked_center[i,1], linked_center[i,3]], [linked_center[i,2], linked_center[i,4]], color=:black, label="")
     end
 
     for i ∈ 1:length(X_subset_clustering)
         for j ∈ 1:length(X_subset_clustering[i])
-            scatter!([center_[i][j][1]], [center_[i][j][2]], markersize=25*(452.106/181)*sqrt(length(X_subset_clustering[i][j])/500), label="")
+            scatter!([center_[i][j][1]], [center_[i][j][2]], markersize=25*(452.106/181)*sqrt(length(X_subset_clustering[i][j])/500), label="", )
         end
     end
 
@@ -297,11 +297,14 @@ plot(d, p, size=(1000,400))
 
 include("../src/utilities/tDATAsets.jl")
 
+Data = rand(Sphere(2), 500)
 Data = cat(rand(Infty(), 500), rand(Sphere(2), 500).+1, dims=2)
 
-d = scatter(Data[1,:], Data[2,:])
-link, X_subset_clustering, Info = mapper(Data, proj_1d, 15, 0.1)
-p = mapper_plot(link, X_subset_clustering, Info)
+d = scatter(Data[1,:], Data[2,:], zcolor=proj_1d(Data), color=:jet)
+
+plot(Data[1,:], Data[2,:], zcolor=proj_1d(X), seriestype=:scatter)
+link, X_subset_clustering, Info = mapper(Data, proj_1d, 5, 0.3)
+p = mapper_plot(link, X_subset_clustering, Info, (-1.5, 1.5), (-1.5,1.5))
 
 plot(d, p, size=(1000,400))
 
