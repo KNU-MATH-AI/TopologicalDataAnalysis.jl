@@ -204,7 +204,7 @@ function mapper(X, filter, interval, overlab)
             SL = hclust(D, linkage=:single)
             plot(SL)
             
-            dbsacn_temp = dbscan(reshape(SL.heights, (1,length(SL.heights))), 0.4maximum(SL.heights))
+            dbsacn_temp = dbscan(reshape(SL.heights, (1,length(SL.heights))), 0.2maximum(SL.heights))
             cutree_temp = cutree(SL, h=SL.heights[dbsacn_temp[1].core_indices[end]])
             
             X_subset_clustering_temp = [[] for j ∈ 1:maximum(cutree_temp)]
@@ -274,14 +274,14 @@ function mapper_plot(link, X_subset_clustering, Info)
     end
     linked_center
 
-    p = plot([linked_center[1,1], linked_center[1,3]], [linked_center[1,2], linked_center[1,4]], color=:black, xlim=(-1.5,1.5), ylim=(-1.5,1.5), label="")
+    p = plot([linked_center[1,1], linked_center[1,3]], [linked_center[1,2], linked_center[1,4]], color=:black, xlim=(-1.5,3), ylim=(-1.5,3), label="")
     for i ∈ 2:length(link)
         plot!([linked_center[i,1], linked_center[i,3]], [linked_center[i,2], linked_center[i,4]], color=:black, label="")
     end
 
     for i ∈ 1:length(X_subset_clustering)
         for j ∈ 1:length(X_subset_clustering[i])
-            scatter!([center_[i][j][1]], [center_[i][j][2]], markersize=25*(452.106/181)*sqrt(length(X_subset_clustering[i][j])/500))
+            scatter!([center_[i][j][1]], [center_[i][j][2]], markersize=25*(452.106/181)*sqrt(length(X_subset_clustering[i][j])/500), label="")
         end
     end
 
@@ -297,7 +297,14 @@ plot(d, p, size=(1000,400))
 
 include("../src/utilities/tDATAsets.jl")
 
-Data = rand(Infty(), 500)
+Data = cat(rand(Infty(), 500), rand(Sphere(2), 500).+1, dims=2)
+
+d = scatter(Data[1,:], Data[2,:])
+link, X_subset_clustering, Info = mapper(Data, proj_1d, 15, 0.1)
+p = mapper_plot(link, X_subset_clustering, Info)
+
+plot(d, p, size=(1000,400))
+
 
 d = scatter(Data[1,:], Data[2,:])
 link, X_subset_clustering, Info = mapper(Data, proj_1d, 10, 0.2)
