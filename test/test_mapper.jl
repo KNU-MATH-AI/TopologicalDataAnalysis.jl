@@ -288,8 +288,19 @@ function mapper_plot(link, X_subset_clustering, Info)
     return p
 end
 
+
 d = scatter(Data[1,:], Data[2,:])
 link, X_subset_clustering, Info = mapper(Data, proj_1d, 5, 0.2)
+p = mapper_plot(link, X_subset_clustering, Info)
+
+plot(d, p, size=(1000,400))
+
+include("../src/utilities/tDATAsets.jl")
+
+Data = rand(Infty(), 500)
+
+d = scatter(Data[1,:], Data[2,:])
+link, X_subset_clustering, Info = mapper(Data, proj_1d, 10, 0.2)
 p = mapper_plot(link, X_subset_clustering, Info)
 
 plot(d, p, size=(1000,400))
