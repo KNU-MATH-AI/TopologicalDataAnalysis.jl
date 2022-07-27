@@ -43,17 +43,13 @@ function vietoris_rips(point_colud::Matrix; max_dims = 3, max_epsilon = 2.0)
             continue
         end
         for face in Δ[k-1]
-            for v ∈ 1:n
-                if v ∉ face
-                    candy = sort([face ; v])
-                else
-                    continue
-                end
-                δ = diam(M_dist, candy)
-                if 0 < δ ≤ max_epsilon
-                    # splx = Set(candy)
-                    if !(hash(candy) ∈ hash_cache)
-                        push!(hash_cache, hash(candy))
+            for v ∈ setdiff(1:maximum(face), face)
+                candy = sort([v; face])
+                hash_candy = hash(candy)
+                if !(hash_candy ∈ hash_cache)
+                    push!(hash_cache, hash_candy)
+                    δ = diam(M_dist, candy)
+                    if 0 < δ ≤ max_epsilon
                         push!(Δ[k], candy)
                         push!(filtered_complex, [δ, candy])
                     end
