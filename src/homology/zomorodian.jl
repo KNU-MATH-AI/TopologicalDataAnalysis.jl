@@ -1,41 +1,46 @@
-using DataFrames
+using NearestNeighbors
 
-filtered_complex = DataFrame([
-0 "a"
-0 "b"
-1 "c"
-1 "d"
-1 "ab"
-1 "bc"
-2 "cd"
-2 "ad"
-3 "ac"
-4 "abc"
-5 "acd"
-], ["epsilon", "simplex"])
-T = copy(filtered_complex)
-T[!, :"marked"] .= false
-T[!, :"slot"] .= [[]]
-T[!, :"J"] .= 0
+"""
+dim(σ::Set)
 
-dimK = 2
+Return the length of given set minus 1. We may assume that σ is a simplex with integer vertices.
+"""
+dim(σ::Set) = length(σ) - 1
 
-dim(σ) = length(σ)
 
-function deg(σ)
-    return T.epsilon[findfirst(T.simplex .== σ)]
+"""
+deg(T::DataFrame, σ::Set)
+
+Return the degree of simplex σ in the given filtered_complex T. T must have the hased values of simplices.
+"""
+function deg(T::DataFrame, σ::Set)
+    return T.degree[findfirst(T.ID .== hash(σ))]
 end
 
-function ∂(σ)
-    k = dim(σ)
-    return [σ[(1:k)[Not(t)]] for t = 1:k]
+"""
+∂(σ::Set)
+
+The boundary operator of a simplex. It returns the array of sets which is {σ ∖ s : s ∈ σ}.
+"""
+function ∂(σ::Set)
+    return [Set(collect(σ)[Not(t)]) for t ∈ 1:length(σ)]
 end
 
-function maxindex(T, chain)
+"""
+maxindex(T::DataFrame, chain)
+
+Find the maximual index of chain in filtered complex T. 'chain' is an array of simplices.
+"""
+function maxindex(T::DataFrame, chain)
     return (T.simplex .∈ Ref(chain)) |> findall |> maximum
 end
 
-function REMOVEPIVOTROWS!(T, σ)
+"""
+REMOVEPIVOTROWS!(T::DataFrame, σ::Set)
+
+Return a differentiated chain without unmarked simplex.
+"""
+function REMOVEPIVOTROWS!(T::DataFrame, σ::Set)
     k = dim(σ); d = ∂(σ)
     d = d[d .∈ Ref(T[T.marked,:simplex])] # Remove unmarked terms in $d$
     while !(d |> isempty)
@@ -47,35 +52,44 @@ function REMOVEPIVOTROWS!(T, σ)
     return d
 end
 
+"""
+zomorodian(filtered_complex::DataFrame)
+
+Return a list of P-intervals and print how it coputed.
+
+     - filtered_complex: A dataframe with two columns, :degree and :simplex.
+
+"""
 function zomorodian(filtered_complex::DataFrame)
     T = copy(filtered_complex)
     m = nrow(T)
     T[!, :"marked"] .= false
     T[!, :"slot"] .= [[]]
     T[!, :"J"] .= 0
+    T[!,:"ID"] = hash.(filtered_complex.simplex)
 
-    L_ = [[] for k = 0:dimK]
-    for j0 = 0:(m-1)
-        j = j0+1
+    L_ = Dict([k => [] for k = 0:maximum(dim.(T.simplex))])
+    for j = 1:m
         σʲ = T[j,:simplex]
         d = REMOVEPIVOTROWS!(T, σʲ)
         if d |> isempty
             T[j,:marked] = true
         else
-            i = maxindex(T, d); k = dim(σʲ)
+            i = maxindex(T, d)
             σⁱ = T[i,:simplex]
-            T[i,[:J,:slot]] = j0,d
-            L_[k] = L_[k] ∪ [(deg(σⁱ), deg(σʲ))]
+            k = dim(σⁱ)
+            T[i,[:J,:slot]] = (j-1), d
+            push!(L_[k], (deg(T, σⁱ), deg(T, σʲ)))
         end
     end
-    for j0 = 0:(m-1)
-        j = j0+1
+    for j = 1:m
         σʲ = T[j,:simplex]
         if (T[j,:marked]) && (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
-            k = dim(σʲ); L_[k] = L_[k] ∪ [(deg(σʲ), Inf)]
+            k = dim(σʲ)
+            push!(L_[k], (deg(T, σʲ), Inf))
         end
     end
-    return L_, T
-end
 
-a, b = zomorodian(filtered_complex)
+    println(T)
+    return L_
+end
