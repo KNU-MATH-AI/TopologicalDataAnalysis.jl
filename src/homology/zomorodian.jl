@@ -1,4 +1,5 @@
 using NearestNeighbors
+using ProgressBars
 
 """
 dim(σ::Array{Int8,1})
@@ -23,7 +24,7 @@ end
 The boundary operator of a simplex. It returns the array of sets which is {σ ∖ s : s ∈ σ}.
 """
 function ∂(σ::Array{Int8,1})
-    return [Array{Int8,1}(collect(σ)[Not(t)]) for t ∈ 1:length(σ)]
+    return [Array{Int8,1}(σ[Not(t)]) for t ∈ 1:length(σ)]
 end
 
 """
@@ -69,7 +70,7 @@ function zomorodian(filtered_complex::DataFrame)
     T[!,:"ID"] = hash.(filtered_complex.simplex)
 
     L_ = Dict([k => [] for k = 0:maximum(dim.(T.simplex))])
-    for j ∈ 1:m
+    for j ∈ ProgressBar(1:m)
         σʲ = T[j,:simplex]
         d = REMOVEPIVOTROWS!(T, σʲ)
         if d |> isempty
@@ -90,6 +91,6 @@ function zomorodian(filtered_complex::DataFrame)
         end
     end
 
-    println(T)
+    # println(T)
     return L_
 end

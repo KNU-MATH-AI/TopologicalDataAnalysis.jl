@@ -7,10 +7,10 @@ using Plots
 using Ripserer
 
 Random.seed!(0)
-point_colud = rand(Sphere(2), 20)
+point_colud = rand(Sphere(2), 15)
 
-fc = VR(point_colud, max_epsilon = 2.0)
-p_intervals = zomorodian(fc);
+@time fc = VR(point_colud, max_epsilon = 2.0)
+p_intervals = zomorodian(fc)
 
 δ_table = unique(fc[:,[1,2]], :degree)
 δ_dict = Dict(δ_table.degree .=> δ_table.appearance)
