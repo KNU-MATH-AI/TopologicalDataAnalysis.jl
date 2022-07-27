@@ -7,7 +7,9 @@ using Plots
 using Ripserer
 
 Random.seed!(0)
-point_colud = rand(Sphere(2), 15)
+point_colud = rand(Sphere(2), 20)
+
+# get(Dict(T.ID .=> T.degree), hash(σ), 0)
 
 @time fc = VR(point_colud, max_epsilon = 2.0)
 p_intervals = zomorodian(fc)

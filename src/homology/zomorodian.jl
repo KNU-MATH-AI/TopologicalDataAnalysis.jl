@@ -9,14 +9,23 @@ Return the length of given set minus 1. We may assume that σ is a simplex with 
 dim(σ::Array{Int8,1}) = length(σ) - 1
 
 
-"""
-deg(T::DataFrame, σ::Array{Int8,1})
+# """
+# deg(T::DataFrame, σ::Array{Int8,1})
 
-Return the degree of simplex σ in the given filtered_complex T. T must have the hased values of simplices.
-"""
-function deg(T::DataFrame, σ::Array{Int8,1})
-    return T.degree[findfirst(T.ID .== hash(σ))]
-end
+# Return the degree of simplex σ in the given filtered_complex T. T must have the hased values of simplices.
+# """
+# function deg(T::DataFrame, σ::Array{Int8,1})
+#     # idx = 0
+#     # hash_σ = hash(σ)
+#     # for tid in T.ID
+#     #     idx += 1
+#     #     if hash_σ == tid
+#     #         break
+#     #     end
+#     # end
+#     # return T.degree[idx]
+#     return T.degree[findfirst(T.ID .== hash(σ))]
+# end
 
 """
 ∂(σ::Array{Int8,1})
@@ -33,7 +42,7 @@ maxindex(T::DataFrame, chain)
 Find the maximual index of chain in filtered complex T. 'chain' is an array of simplices.
 """
 function maxindex(T::DataFrame, chain)
-    return (T.simplex .∈ Ref(chain)) |> findall |> maximum
+    return (T.hash .∈ Ref(hash.(chain))) |> findall |> maximum
 end
 
 """
@@ -43,14 +52,14 @@ Return a differentiated chain without unmarked simplex.
 """
 function REMOVEPIVOTROWS!(T::DataFrame, σ::Array{Int8,1})
     k = dim(σ); d = ∂(σ)
-    d = d[d .∈ Ref(T[T.marked,:simplex])] # Remove unmarked terms in $d$
+    d = d[d .∈ Ref(T.simplex[T.marked])] # Remove unmarked terms in $d$
     while !(d |> isempty)
         i = maxindex(T, d)
         if T[i,:slot] |> isempty break end
         d = symdiff(d, T[i,:slot])
         # print("d in empty")
     end
-    return d
+    return d # d is a chain that an array of simplices which is face of σ
 end
 
 """
@@ -67,7 +76,12 @@ function zomorodian(filtered_complex::DataFrame)
     T[!, :"marked"] .= false
     T[!, :"slot"] .= [[]]
     T[!, :"J"] .= 0
-    T[!,:"ID"] = hash.(filtered_complex.simplex)
+    T[!, :"hash"] = hash.(filtered_complex.simplex)
+    
+    hash_degree = Dict(T.hash .=> T.degree)
+    function deg(σ::Array{Int8,1})
+        return get(hash_degree, hash(σ), 0)
+    end
 
     L_ = Dict([k => [] for k = 0:maximum(dim.(T.simplex))])
     for j ∈ ProgressBar(1:m)
@@ -80,14 +94,14 @@ function zomorodian(filtered_complex::DataFrame)
             σⁱ = T[i,:simplex]
             k = dim(σⁱ)
             T[i,[:J,:slot]] = (j-1), d
-            push!(L_[k], (deg(T, σⁱ), deg(T, σʲ)))
+            push!(L_[k], (deg(σⁱ), deg(σʲ)))
         end
     end
     for j ∈ 1:m
         σʲ = T[j,:simplex]
         if (T[j,:marked]) && (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
             k = dim(σʲ)
-            push!(L_[k], (deg(T, σʲ), Inf))
+            push!(L_[k], (deg(σʲ), Inf))
         end
     end
 
