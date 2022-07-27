@@ -7,7 +7,7 @@ using Plots
 using Ripserer
 
 Random.seed!(0)
-point_colud = rand(Sphere(2), 12)
+point_colud = rand(Sphere(2), 20)
 
 fc = VR(point_colud, max_epsilon = 2.0)
 p_intervals = zomorodian(fc);

@@ -28,15 +28,15 @@ function vietoris_rips(point_colud::Matrix; max_dims = 3, max_epsilon = 2.0)
     end
 
     # Initialization
-    filtered_complex = DataFrame(appearance = Float16[], simplex = Set{Int64}[])
+    filtered_complex = DataFrame(appearance = Float16[], simplex = Array{Int8, 1}[])
     Δ = Dict()
     hash_cache = []
 
     for k ∈ 0:max_dims
-        push!(Δ, k::Int64 => Set{Set{Int64}}())
+        push!(Δ, k::Int64 => Array{Array{Int8, 1}, 1}())
         if k == 0
             for j ∈ 1:n
-                splx = Set([j])
+                splx = [j]
                 push!(Δ[k], splx)
                 push!(filtered_complex, [0, splx])
             end
@@ -45,17 +45,17 @@ function vietoris_rips(point_colud::Matrix; max_dims = 3, max_epsilon = 2.0)
         for face in Δ[k-1]
             for v ∈ 1:n
                 if v ∉ face
-                    candy = [collect(face) ; v]
+                    candy = sort([face ; v])
                 else
                     continue
                 end
                 δ = diam(M_dist, candy)
                 if 0 < δ ≤ max_epsilon
-                    splx = Set(candy)
-                    if !(hash(splx) ∈ hash_cache)
-                        push!(hash_cache, hash(splx))
-                        push!(Δ[k], splx)
-                        push!(filtered_complex, [δ, splx])
+                    # splx = Set(candy)
+                    if !(hash(candy) ∈ hash_cache)
+                        push!(hash_cache, hash(candy))
+                        push!(Δ[k], candy)
+                        push!(filtered_complex, [δ, candy])
                     end
                 end
             end

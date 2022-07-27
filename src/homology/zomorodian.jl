@@ -1,29 +1,29 @@
 using NearestNeighbors
 
 """
-dim(σ::Set)
+dim(σ::Array{Int8,1})
 
 Return the length of given set minus 1. We may assume that σ is a simplex with integer vertices.
 """
-dim(σ::Set) = length(σ) - 1
+dim(σ::Array{Int8,1}) = length(σ) - 1
 
 
 """
-deg(T::DataFrame, σ::Set)
+deg(T::DataFrame, σ::Array{Int8,1})
 
 Return the degree of simplex σ in the given filtered_complex T. T must have the hased values of simplices.
 """
-function deg(T::DataFrame, σ::Set)
+function deg(T::DataFrame, σ::Array{Int8,1})
     return T.degree[findfirst(T.ID .== hash(σ))]
 end
 
 """
-∂(σ::Set)
+∂(σ::Array{Int8,1})
 
 The boundary operator of a simplex. It returns the array of sets which is {σ ∖ s : s ∈ σ}.
 """
-function ∂(σ::Set)
-    return [Set(collect(σ)[Not(t)]) for t ∈ 1:length(σ)]
+function ∂(σ::Array{Int8,1})
+    return [Array{Int8,1}(collect(σ)[Not(t)]) for t ∈ 1:length(σ)]
 end
 
 """
@@ -36,11 +36,11 @@ function maxindex(T::DataFrame, chain)
 end
 
 """
-REMOVEPIVOTROWS!(T::DataFrame, σ::Set)
+REMOVEPIVOTROWS!(T::DataFrame, σ::Array{Int8,1})
 
 Return a differentiated chain without unmarked simplex.
 """
-function REMOVEPIVOTROWS!(T::DataFrame, σ::Set)
+function REMOVEPIVOTROWS!(T::DataFrame, σ::Array{Int8,1})
     k = dim(σ); d = ∂(σ)
     d = d[d .∈ Ref(T[T.marked,:simplex])] # Remove unmarked terms in $d$
     while !(d |> isempty)
@@ -69,7 +69,7 @@ function zomorodian(filtered_complex::DataFrame)
     T[!,:"ID"] = hash.(filtered_complex.simplex)
 
     L_ = Dict([k => [] for k = 0:maximum(dim.(T.simplex))])
-    for j = 1:m
+    for j ∈ 1:m
         σʲ = T[j,:simplex]
         d = REMOVEPIVOTROWS!(T, σʲ)
         if d |> isempty
@@ -82,7 +82,7 @@ function zomorodian(filtered_complex::DataFrame)
             push!(L_[k], (deg(T, σⁱ), deg(T, σʲ)))
         end
     end
-    for j = 1:m
+    for j ∈ 1:m
         σʲ = T[j,:simplex]
         if (T[j,:marked]) && (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
             k = dim(σʲ)
