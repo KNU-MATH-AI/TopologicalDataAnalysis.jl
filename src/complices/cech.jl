@@ -67,7 +67,7 @@ end
 Δ
 preΔ[end]
 cache_r |> unique |> sort
-union(reduce(∪, Δ0), reduce(∪, reduce(∪, Δ))) |> sort
+# union(reduce(∪, Δ0), reduce(∪, reduce(∪, Δ))) |> sort
 
 candy = [5,8,11,12]
 c, r = boundingsphere([M2n[:,idx] for idx in candy])

@@ -7,11 +7,11 @@ using Plots
 using Ripserer
 
 Random.seed!(0)
-point_colud = rand(Sphere(2), 20)
+point_colud = rand(Sphere(2), 40)
 
 # get(Dict(T.ID .=> T.degree), hash(σ), 0)
 
-@time fc = VR(point_colud, max_epsilon = 2.0)
+@time fc = VR(point_colud)
 p_intervals = zomorodian(fc)
 
 δ_table = unique(fc[:,[1,2]], :degree)

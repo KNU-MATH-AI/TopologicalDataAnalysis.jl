@@ -9,24 +9,6 @@ Return the length of given set minus 1. We may assume that σ is a simplex with 
 dim(σ::Array{Int8,1}) = length(σ) - 1
 
 
-# """
-# deg(T::DataFrame, σ::Array{Int8,1})
-
-# Return the degree of simplex σ in the given filtered_complex T. T must have the hased values of simplices.
-# """
-# function deg(T::DataFrame, σ::Array{Int8,1})
-#     # idx = 0
-#     # hash_σ = hash(σ)
-#     # for tid in T.ID
-#     #     idx += 1
-#     #     if hash_σ == tid
-#     #         break
-#     #     end
-#     # end
-#     # return T.degree[idx]
-#     return T.degree[findfirst(T.ID .== hash(σ))]
-# end
-
 """
 ∂(σ::Array{Int8,1})
 
@@ -51,8 +33,9 @@ REMOVEPIVOTROWS!(T::DataFrame, σ::Array{Int8,1})
 Return a differentiated chain without unmarked simplex.
 """
 function REMOVEPIVOTROWS!(T::DataFrame, σ::Array{Int8,1})
-    k = dim(σ); d = ∂(σ)
-    d = d[d .∈ Ref(T.simplex[T.marked])] # Remove unmarked terms in $d$
+    #k = dim(σ)
+    d = ∂(σ)
+    d = d[hash.(d) .∈ Ref(T.hash[T.marked])] # Remove unmarked terms in $d$
     while !(d |> isempty)
         i = maxindex(T, d)
         if T[i,:slot] |> isempty break end
@@ -76,7 +59,7 @@ function zomorodian(filtered_complex::DataFrame)
     T[!, :"marked"] .= false
     T[!, :"slot"] .= [[]]
     T[!, :"J"] .= 0
-    T[!, :"hash"] = hash.(filtered_complex.simplex)
+    T[!, :"hash"] = hash.(T.simplex)
     
     hash_degree = Dict(T.hash .=> T.degree)
     function deg(σ::Array{Int8,1})
@@ -85,21 +68,29 @@ function zomorodian(filtered_complex::DataFrame)
 
     L_ = Dict([k => [] for k = 0:maximum(dim.(T.simplex))])
     for j ∈ ProgressBar(1:m)
-        σʲ = T[j,:simplex]
+        σʲ = T.simplex[j]
         d = REMOVEPIVOTROWS!(T, σʲ)
         if d |> isempty
-            T[j,:marked] = true
+            T.marked[j] = true
         else
             i = maxindex(T, d)
-            σⁱ = T[i,:simplex]
+            σⁱ = T.simplex[i]
             k = dim(σⁱ)
             T[i,[:J,:slot]] = (j-1), d
-            push!(L_[k], (deg(σⁱ), deg(σʲ)))
+
+            # push!(L_[k], (deg(σⁱ), deg(σʲ)))
+            deg_i = deg(σⁱ)
+            deg_j = deg(σʲ)
+            if deg_i != deg_j
+                push!(L_[k], (deg_i, deg_j))
+            end
         end
     end
-    for j ∈ 1:m
-        σʲ = T[j,:simplex]
-        if (T[j,:marked]) && (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
+    # for j ∈ 1:m
+    #    if (T[j,:marked]) && (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
+    for j ∈ findall(T.marked)
+        if (T[j,:slot] |> isempty) && (T[j,:J] |> iszero)
+            σʲ = T.simplex[j]
             k = dim(σʲ)
             push!(L_[k], (deg(σʲ), Inf))
         end

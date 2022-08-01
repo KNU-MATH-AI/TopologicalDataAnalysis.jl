@@ -41,7 +41,7 @@ function vietoris_rips(point_colud::Matrix; max_dims = 3, max_epsilon = 2.0)
             end
             continue
         end
-        
+
         candy_bucket = []
         for face in Δ[k-1]
             add1 = [sort([v ; face]) for v in setdiff(1:n, face)]
